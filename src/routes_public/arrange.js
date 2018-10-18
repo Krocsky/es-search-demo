@@ -43,9 +43,10 @@ router.post('/arrange', async function ({ body: { days } }, { succ, err }, ) {
 /**
  * 检索
  */
-router.post('/arrange/query', async function ({ body: { inputs } }, { succ }, ) {
-  let resultData = await queryArrange(inputs)
-  succ(resultData)
+router.post('/arrange/query', async function ({ body: { inputs } }, { succ, err }, ) {
+  await queryArrange(inputs)
+    .then(succ)
+    .catch(err)
 })
 
 export default router
