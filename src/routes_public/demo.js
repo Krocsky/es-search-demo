@@ -5,8 +5,7 @@ const router = express.Router()
 
 router.get('/welcome', async function (_, { succ }, ) {
   let now = dayjs()
-  console.log(now.add(1, 'day'))
-  console.log(now)
+  console.log('获取本地时区的偏移量：' + now.format('Z'))
   succ('welcome')
 })
 

@@ -11,7 +11,8 @@ import arrangeSubjectMapping from '../es_mappings/arrange_subject'
 import arrangeSubjectModel from '../es_models/arrange_subject'
 
 
-import { createIndex, isExistIndex, createOrUpdateDocument, searchByFields } from '@cybereits/lib-es-client'
+import { createIndex, ScoreMode, BoostMode, isExistIndex, createOrUpdateDocument, searchWithWeight } from '@cybereits/lib-es-client'
+import { querySchedule } from '../es_function_score/functions'
 
 const indexName = 'arrange_subject'
 const typeName = 'arrange'
@@ -73,7 +74,6 @@ export async function arrangeClass(arrangeDays) {
     raw: true,
   })
 
-  let arrangeArr = []
   let esArr = []
   for (let index = 0; index < arrangeDays; index++) {
     let nextDay = now.add(index, 'day')
@@ -87,11 +87,12 @@ export async function arrangeClass(arrangeDays) {
     let model = { teacher_id: null, subject_id: null, class_of_weeks: DAY_OF_WEEKDAY.Monday, class_of_date: now }
     model.teacher_id = randomSubjectId
     model.subject_id = randomTeacherId
-    arrangeArr.push(model)
 
     // elasticsearch
     let subject = await Subjects.findById(randomSubjectId)
     let teacher = await Teachers.findById(randomTeacherId)
+
+    let oneSchedule = await Schedules.create(model)
 
     arrangeSubjectModel.sub_name = subject.name
     arrangeSubjectModel.sub_description = subject.description
@@ -105,10 +106,8 @@ export async function arrangeClass(arrangeDays) {
 
     esArr.push(arrangeSubjectModel)
 
-    createOrUpdateDocument(esClient, indexName, typeName, '', arrangeSubjectModel)
+    createOrUpdateDocument(esClient, indexName, typeName, oneSchedule.id, arrangeSubjectModel)
   }
-
-  await Schedules.bulkCreate(arrangeArr)
 }
 
 /**
@@ -117,7 +116,7 @@ export async function arrangeClass(arrangeDays) {
  */
 export async function queryArrange(inputs) {
   let resultQuery
-  await searchByFields(esClient, indexName, typeName, inputs, ['sub_name', 'sub_description', 'teacher_description'], 20, true)
+  await searchWithWeight(esClient, indexName, typeName, inputs, ['sub_name', 'sub_description', 'teacher_description'], querySchedule, ScoreMode.multiply, BoostMode.replace)
     .then(data => {
       resultQuery = data
     })
