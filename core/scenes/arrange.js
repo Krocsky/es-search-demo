@@ -37,12 +37,6 @@ export function createSubject(name, description, totalMinutes, timeOfWeek, isNee
     begin_time: beginTime,
     end_time: endTime,
   })
-
-  if (isExistIndex(esClient, indexName)) {
-    createIndex(esClient, indexName, typeName, arrangeSubjectMapping)
-      .then(data => console.log(data))
-      .catch(ex => { throw new Error(ex) })
-  }
 }
 
 /**
@@ -74,7 +68,6 @@ export async function arrangeClass(arrangeDays) {
     raw: true,
   })
 
-  let esArr = []
   for (let index = 0; index < arrangeDays; index++) {
     let nextDay = now.add(index, 'day')
 
@@ -104,10 +97,10 @@ export async function arrangeClass(arrangeDays) {
     arrangeSubjectModel.teacher_description = teacher.description
     arrangeSubjectModel.on_subject_at = nextDay
 
-    esArr.push(arrangeSubjectModel)
-
     createOrUpdateDocument(esClient, indexName, typeName, oneSchedule.id, arrangeSubjectModel)
   }
+
+  return '排课成功'
 }
 
 /**
