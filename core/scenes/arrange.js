@@ -11,7 +11,7 @@ import arrangeSubjectMapping from '../es_mappings/arrange_subject'
 import arrangeSubjectModel from '../es_models/arrange_subject'
 
 
-import { createIndex, ScoreMode, BoostMode, isExistIndex, createOrUpdateDocument, searchWithWeight } from '@cybereits/lib-es-client'
+import { ScoreMode, BoostMode, createOrUpdateDocument, searchWithWeight, isExistIndex, createIndex } from '@cybereits/lib-es-client'
 import { querySchedule } from '../es_function_score/functions'
 
 const indexName = 'arrange_subject'
@@ -37,6 +37,12 @@ export function createSubject(name, description, totalMinutes, timeOfWeek, isNee
     begin_time: beginTime,
     end_time: endTime,
   })
+
+  if (isExistIndex(esClient, indexName)) {
+    createIndex(esClient, indexName, typeName, arrangeSubjectMapping)
+      .then(data => console.log(data))
+      .catch(ex => { throw new Error(ex) })
+  }
 }
 
 /**
